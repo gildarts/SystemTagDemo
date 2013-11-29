@@ -1,0 +1,49 @@
+<Contract Name="DecisionMaking" Enabled="True">
+	<Definition>
+	<Authentication>
+		<!--		<Session Enabled="True" Timeout="1500"/>-->
+		<Session Enabled="True" Timeout="1500" Type="DB" />
+		<Passport Enabled="True">
+			<Issuer Name="greening.shared.user">
+				<CertificateProvider Type="HttpGet">http://web.ischool.com.tw/service/shared/info/Public.GetPublicKey</CertificateProvider>
+			</Issuer>
+			<AccountLinking Type="sql">
+				<GetUserDataQuery>
+					<![CDATA[
+select teacher.st_login_name as "UserName"
+from tag join tag_teacher on tag.id=tag_teacher.ref_tag_id
+	join teacher on teacher.id=tag_teacher.ref_teacher_id
+where tag.access_control_code ='Role.0001' and lower(st_login_name) = lower(@UserName)
+]]>
+				</GetUserDataQuery>
+				<GetUserRolesQuery>
+					<![CDATA[SELECT 'School' as "RoleName",@UserName as "UserName"]]>
+				</GetUserRolesQuery>
+			</AccountLinking>
+		</Passport>
+	</Authentication>
+</Definition>
+	<Package Name="Test">
+		<Service Enabled="true" Name="Demo">
+			<Definition Type="dbhelper">
+				<Action>Select</Action>
+				<SQLTemplate><![CDATA[SELECT @@FieldList FROM exam WHERE @@Condition @@Order]]></SQLTemplate>
+				<ResponseRecordElement>Response/Exam</ResponseRecordElement>
+				<FieldList Name="FieldList" Source="Field">
+					<Field Alias="Id" Mandatory="True" Source="Id" Target="id" />
+					<Field Alias="ExamName" Mandatory="True" Source="ExamName" Target="exam_name" />
+					<Field Alias="Description" Mandatory="True" Source="Description" Target="description" />
+					<Field Alias="DisplayOrder" Mandatory="True" Source="DisplayOrder" Target="display_order" />
+				</FieldList>
+				<Conditions Name="Condition" Required="False" Source="Condition">
+					<Condition Source="Id" Target="id" />
+					<Condition Source="ExamName" Target="exam_name" />
+					<Condition Source="Description" Target="description" />
+					<Condition Source="DisplayOrder" Target="display_order" />
+				</Conditions>
+				<Orders Name="Order" Source="Order" />
+				<Pagination Allow="True" />
+			</Definition>
+		</Service>
+	</Package>
+</Contract>
